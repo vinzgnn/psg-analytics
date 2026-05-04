@@ -1,18 +1,18 @@
 # =============================================================
 # PSG Analytics — dépendances Python
 # =============================================================
-# Phase 1 — Setup & test API
-# =============================================================
+
+# --- Phase 1 — Setup & test API ------------------------------
 requests>=2.31.0
 python-dotenv>=1.0.0
-
-# Manipulation de données (utile dès maintenant pour explorer)
 pandas>=2.2.0
-
-# Notebooks d'exploration
 jupyter>=1.0.0
 
+# --- Phase 2 — BigQuery & dbt --------------------------------
+google-cloud-bigquery>=3.25.0
+pandas-gbq>=0.23.0
+db-dtypes>=1.2.0
+
 # Les phases suivantes ajouteront :
-# - google-cloud-bigquery, pandas-gbq (Phase 2)
-# - dbt-bigquery (Phase 2)
+# - dbt-bigquery (Phase 2 - étape 12)
 # - streamlit, anthropic (Phase 4)
