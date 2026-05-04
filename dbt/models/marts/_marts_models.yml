@@ -1,0 +1,90 @@
+# ================================================================
+# Documentation et tests des marts
+# ================================================================
+
+version: 2
+
+models:
+  - name: mart_classement
+    description: "Classement Ligue 1 (vue TOTAL) avec écarts de points entre équipes voisines."
+    columns:
+      - name: position
+        description: "Position au classement (1 = leader)."
+        data_tests:
+          - not_null
+          - unique
+      - name: team_id
+        description: "ID football-data.org de l'équipe."
+        data_tests:
+          - not_null
+      - name: team_name
+        description: "Nom complet de l'équipe."
+        data_tests:
+          - not_null
+      - name: points
+        description: "Points cumulés sur la saison."
+        data_tests:
+          - not_null
+      - name: points_ahead_of_next
+        description: "Écart de points avec l'équipe directement derrière (0 si dernier)."
+      - name: points_behind_prev
+        description: "Écart de points avec l'équipe directement devant (0 si premier)."
+      - name: is_psg
+        description: "TRUE pour la ligne du PSG."
+
+  - name: mart_psg_matches
+    description: "Tous les matchs du PSG (saison en cours), normalisés en perspective PSG (psg_score, opponent_score, psg_result)."
+    columns:
+      - name: match_id
+        description: "Identifiant unique du match."
+        data_tests:
+          - not_null
+          - unique
+      - name: match_date
+        description: "Date du match."
+        data_tests:
+          - not_null
+      - name: psg_side
+        description: "Côté joué par le PSG : 'HOME' ou 'AWAY'."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['HOME', 'AWAY']
+      - name: opponent_name
+        description: "Nom de l'équipe adverse."
+        data_tests:
+          - not_null
+      - name: psg_result
+        description: "Résultat depuis le POV PSG : WIN / DRAW / LOSS / NULL (match non terminé)."
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['WIN', 'DRAW', 'LOSS']
+              config:
+                where: "is_finished = true"
+      - name: psg_points
+        description: "Points gagnés (3/1/0) — NULL si match non terminé."
+
+  - name: mart_top_scorers
+    description: "Top 100 buteurs Ligue 1 enrichis (âge, ratios, buts hors pen)."
+    columns:
+      - name: rank
+        description: "Position dans le classement des buteurs."
+        data_tests:
+          - not_null
+          - unique
+      - name: player_id
+        description: "ID football-data.org du joueur."
+        data_tests:
+          - not_null
+      - name: goals
+        description: "Buts marqués sur la saison."
+        data_tests:
+          - not_null
+      - name: goals_open_play
+        description: "Buts hors penalty (goals - penalties)."
+      - name: goal_contributions
+        description: "Buts + passes décisives."
+      - name: is_psg_player
+        description: "TRUE si le joueur évolue au PSG."

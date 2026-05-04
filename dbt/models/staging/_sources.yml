@@ -1,0 +1,51 @@
+# ================================================================
+# Sources — déclaration des tables raw produites par les scripts Python
+# ================================================================
+# dbt utilise ce fichier pour :
+# 1. Référencer les tables raw via la fonction `source()` plutôt que des refs textuels
+# 2. Tracer le lineage (visualiser les dépendances dans dbt docs)
+# 3. Tester la fraîcheur des données (`dbt source freshness`)
+# ================================================================
+
+version: 2
+
+sources:
+  - name: raw
+    description: "Tables brutes ingérées par les scripts Python depuis l'API football-data.org"
+    database: psg-analytics-2026
+    schema: psg_analytics
+    tables:
+      - name: raw_matches
+        description: "Matchs de Ligue 1 (saison en cours) — un enregistrement par match."
+        columns:
+          - name: match_id
+            description: "Identifiant unique du match (clé primaire)."
+            data_tests:
+              - not_null
+              - unique
+          - name: utc_date
+            description: "Date et heure du match en UTC."
+          - name: status
+            description: "Statut du match (SCHEDULED, FINISHED, POSTPONED, etc.)."
+
+      - name: raw_standings
+        description: "Classement Ligue 1 — vues TOTAL/HOME/AWAY (selon disponibilité de l'API)."
+        columns:
+          - name: standings_type
+            description: "Type de classement (TOTAL, HOME, AWAY)."
+            data_tests:
+              - not_null
+              - accepted_values:
+                  values: ['TOTAL', 'HOME', 'AWAY']
+          - name: position
+            description: "Position de l'équipe dans le classement."
+          - name: team_id
+            description: "Identifiant football-data.org de l'équipe."
+
+      - name: raw_scorers
+        description: "Top 100 buteurs de Ligue 1 (saison en cours)."
+        columns:
+          - name: player_id
+            description: "Identifiant football-data.org du joueur."
+          - name: goals
+            description: "Nombre de buts marqués."

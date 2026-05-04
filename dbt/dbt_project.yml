@@ -1,0 +1,40 @@
+# ================================================================
+# PSG Analytics — Configuration dbt
+# ================================================================
+# Ce fichier déclare le projet dbt et la stratégie de matérialisation
+# de chaque dossier de modèles.
+# La connexion BigQuery est définie dans ~/.dbt/profiles.yml.
+# ================================================================
+
+name: 'psg_analytics'
+version: '1.0.0'
+config-version: 2
+
+# Profil de connexion (référence ~/.dbt/profiles.yml)
+profile: 'psg_analytics'
+
+# Chemins relatifs au projet dbt
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+# Dossiers générés par dbt à supprimer lors d'un `dbt clean`
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# ================================================================
+# Stratégie de matérialisation par couche
+# ================================================================
+# - staging : VUE (toujours à jour, peu coûteuse, rebuild instantané)
+# - marts   : TABLE (performance pour Looker Studio, calcul une fois)
+# ================================================================
+models:
+  psg_analytics:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table

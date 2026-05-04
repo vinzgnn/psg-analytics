@@ -1,0 +1,7 @@
+# dbt artefacts générés (ne pas committer)
+target/
+dbt_packages/
+logs/
+
+# Profil local éventuel (les credentials doivent rester hors repo)
+profiles.yml

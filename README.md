@@ -51,11 +51,33 @@ Looker Studio  +  Assistant Claude (Streamlit)
 
 | Phase | Contenu | Statut |
 |---|---|---|
-| **Phase 1** | Cadrage & Setup | 🚧 En cours |
-| **Phase 2** | Collecte & Modélisation (Python + BigQuery + dbt) | ⏳ |
-| **Phase 3** | Dashboard Looker Studio | ⏳ |
+| **Phase 1** | Cadrage & Setup | ✅ Terminée |
+| **Phase 2** | Collecte & Modélisation (Python + BigQuery + dbt) | ✅ Terminée |
+| **Phase 3** | Dashboard Looker Studio | 🚧 En cours |
 | **Phase 4** | Assistant IA (Streamlit + API Claude) | ⏳ |
 | **Phase 5** | Déploiement & Documentation | ⏳ |
+
+## Modélisation dbt
+
+Trois couches dans BigQuery (`psg_analytics` dataset) :
+
+| Couche | Modèles | Type | Rôle |
+|---|---|---|---|
+| **raw** | `raw_matches`, `raw_standings`, `raw_scorers` | TABLE | Données brutes ingérées par scripts Python |
+| **staging** | `stg_matches`, `stg_standings`, `stg_scorers` | VIEW | Nettoyage, typage, flags PSG dérivés |
+| **marts** | `mart_classement`, `mart_psg_matches`, `mart_top_scorers` | TABLE | Métriques métier prêtes pour le dashboard |
+
+Pour reconstruire toute la chaîne :
+```bash
+# 1. Collecte API → raw
+python scripts/collect_all.py
+
+# 2. Transformation raw → staging → marts
+cd dbt && dbt build
+
+# 3. Documentation interactive (lineage graph)
+dbt docs generate && dbt docs serve --port 8081
+```
 
 ## Structure du projet
 
