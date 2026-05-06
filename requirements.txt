@@ -12,7 +12,7 @@ jupyter>=1.0.0
 google-cloud-bigquery>=3.25.0
 pandas-gbq>=0.23.0
 db-dtypes>=1.2.0
+dbt-bigquery>=1.11.0
 
-# Les phases suivantes ajouteront :
-# - dbt-bigquery (Phase 2 - étape 12)
-# - streamlit, anthropic (Phase 4)
+# --- Phase 4 — à venir ---------------------------------------
+# - streamlit, anthropic (à ajouter en Phase 4)
