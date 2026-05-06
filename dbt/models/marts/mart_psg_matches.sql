@@ -68,24 +68,34 @@ normalized as (
 
     from psg_matches
 
+),
+
+with_metrics as (
+
+    select
+        *,
+        -- Différentiel de buts (POV PSG)
+        psg_score - opponent_score as psg_goal_diff,
+        -- Points gagnés sur ce match
+        case psg_result
+            when 'WIN'  then 3
+            when 'DRAW' then 1
+            when 'LOSS' then 0
+            else null
+        end as psg_points,
+        -- Indicateur clean sheet
+        case
+            when not is_finished then null
+            when opponent_score = 0 then true
+            else false
+        end as is_clean_sheet
+    from normalized
+
 )
 
 select
     *,
-    -- Différentiel de buts (POV PSG)
-    psg_score - opponent_score as psg_goal_diff,
-    -- Points gagnés sur ce match
-    case psg_result
-        when 'WIN'  then 3
-        when 'DRAW' then 1
-        when 'LOSS' then 0
-        else null
-    end as psg_points,
-    -- Indicateur clean sheet
-    case
-        when not is_finished then null
-        when opponent_score = 0 then true
-        else false
-    end as is_clean_sheet
-from normalized
+    -- Cumul des points journée après journée (window function)
+    sum(psg_points) over (order by matchday) as psg_points_cumul
+from with_metrics
 order by match_date desc
