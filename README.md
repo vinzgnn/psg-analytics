@@ -7,6 +7,7 @@
 [![dbt](https://img.shields.io/badge/dbt-Core-red.svg)](https://www.getdbt.com/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-Cloud-ff4b4b.svg)](https://streamlit.io/)
 [![Dashboard](https://img.shields.io/badge/Dashboard-Live-brightgreen.svg)](https://datastudio.google.com/reporting/7e12323e-aed2-4884-9ee2-b3c1e4b170c6)
+[![Assistant IA](https://img.shields.io/badge/Assistant%20IA-Live-ff4b4b.svg)](https://psg-analytic.streamlit.app)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
@@ -14,6 +15,12 @@
 ## Problématique
 
 > Comment analyser et rendre intelligibles les performances du PSG à partir de données publiques, en combinant des outils data modernes et un assistant IA conversationnel ?
+
+## Assistant IA
+
+**Assistant PSG — live** : https://psg-analytic.streamlit.app
+
+Interface conversationnelle propulsée par l'API Claude (Anthropic) avec tool use BigQuery. Pose des questions en langage naturel sur le PSG et la Ligue 1 — l'agent interroge les données en temps réel.
 
 ## Dashboard interactif
 
@@ -81,8 +88,8 @@ Looker Studio  +  Assistant Claude (Streamlit)
 | **Phase 1** | Cadrage & Setup | ✅ Terminée |
 | **Phase 2** | Collecte & Modélisation (Python + BigQuery + dbt) | ✅ Terminée |
 | **Phase 3** | Dashboard Looker Studio | ✅ Terminée |
-| **Phase 4** | Assistant IA (Streamlit + API Claude) | 🚧 En cours |
-| **Phase 5** | Déploiement & Documentation | ⏳ |
+| **Phase 4** | Assistant IA (Streamlit + API Claude) | ✅ Terminée |
+| **Phase 5** | Déploiement & Documentation | ✅ Terminée |
 
 ## Modélisation dbt
 
