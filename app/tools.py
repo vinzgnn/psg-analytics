@@ -1,10 +1,16 @@
 """
 tools.py — Fonctions BigQuery exposées à l'agent Claude.
 Chaque fonction interroge un mart dbt et retourne un dict Python.
+
+Authentification GCP :
+  - En local     : via GOOGLE_APPLICATION_CREDENTIALS (fichier JSON) dans .env
+  - Streamlit Cloud : via st.secrets["gcp_service_account"] (dict JSON injecté)
 """
 
 import os
+import json
 from google.cloud import bigquery
+from google.oauth2 import service_account
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,7 +20,23 @@ DATASET  = os.getenv("BIGQUERY_DATASET", "psg_analytics")
 
 
 def _client() -> bigquery.Client:
-    """Crée un client BigQuery authentifié via la clé de service."""
+    """
+    Crée un client BigQuery authentifié.
+    Priorité : st.secrets (Streamlit Cloud) > GOOGLE_APPLICATION_CREDENTIALS (local).
+    """
+    try:
+        # Sur Streamlit Cloud, les secrets sont injectés via st.secrets
+        import streamlit as st
+        if "gcp_service_account" in st.secrets:
+            creds = service_account.Credentials.from_service_account_info(
+                dict(st.secrets["gcp_service_account"]),
+                scopes=["https://www.googleapis.com/auth/cloud-platform"],
+            )
+            return bigquery.Client(project=PROJECT, credentials=creds)
+    except Exception:
+        pass
+
+    # En local : on utilise GOOGLE_APPLICATION_CREDENTIALS via l'env
     return bigquery.Client(project=PROJECT)
 
 

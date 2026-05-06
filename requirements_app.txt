@@ -1,0 +1,10 @@
+# =============================================================
+# Dépendances de l'app Streamlit (Streamlit Cloud)
+# Séparé de requirements.txt qui contient dbt, jupyter, etc.
+# =============================================================
+
+python-dotenv>=1.0.0
+google-cloud-bigquery>=3.25.0
+db-dtypes>=1.2.0
+streamlit>=1.57.0
+anthropic>=0.99.0
