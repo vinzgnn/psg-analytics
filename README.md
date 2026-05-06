@@ -6,6 +6,7 @@
 [![BigQuery](https://img.shields.io/badge/BigQuery-Cloud-orange.svg)](https://cloud.google.com/bigquery)
 [![dbt](https://img.shields.io/badge/dbt-Core-red.svg)](https://www.getdbt.com/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-Cloud-ff4b4b.svg)](https://streamlit.io/)
+[![Dashboard](https://img.shields.io/badge/Dashboard-Live-brightgreen.svg)](https://datastudio.google.com/reporting/7e12323e-aed2-4884-9ee2-b3c1e4b170c6)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
@@ -13,6 +14,18 @@
 ## Problématique
 
 > Comment analyser et rendre intelligibles les performances du PSG à partir de données publiques, en combinant des outils data modernes et un assistant IA conversationnel ?
+
+## Dashboard interactif
+
+**Dashboard public Looker Studio** : https://datastudio.google.com/reporting/7e12323e-aed2-4884-9ee2-b3c1e4b170c6
+
+Trois pages d'analyse :
+
+| Page | Contenu |
+|---|---|
+| **1. Classement** | Tableau du classement Ligue 1 avec mise en évidence du PSG |
+| **2. Performance PSG** | Bilan saison : V/N/D, points cumulés, clean sheets, derniers matchs |
+| **3. Top performers** | Top buteurs et passeurs L1 + focus sur les joueurs PSG |
 
 ## Auteur
 
@@ -53,8 +66,8 @@ Looker Studio  +  Assistant Claude (Streamlit)
 |---|---|---|
 | **Phase 1** | Cadrage & Setup | ✅ Terminée |
 | **Phase 2** | Collecte & Modélisation (Python + BigQuery + dbt) | ✅ Terminée |
-| **Phase 3** | Dashboard Looker Studio | 🚧 En cours |
-| **Phase 4** | Assistant IA (Streamlit + API Claude) | ⏳ |
+| **Phase 3** | Dashboard Looker Studio | ✅ Terminée |
+| **Phase 4** | Assistant IA (Streamlit + API Claude) | 🚧 En cours |
 | **Phase 5** | Déploiement & Documentation | ⏳ |
 
 ## Modélisation dbt
@@ -96,7 +109,7 @@ psg-analytics/
 
 ```bash
 # 1. Cloner le repo
-git clone https://github.com/<ton-username>/psg-analytics.git
+git clone https://github.com/vinzgnn/psg-analytics.git
 cd psg-analytics
 
 # 2. Créer l'environnement virtuel
