@@ -27,6 +27,20 @@ Trois pages d'analyse :
 | **2. Performance PSG** | Bilan saison : V/N/D, points cumulés, clean sheets, derniers matchs |
 | **3. Top performers** | Top buteurs et passeurs L1 + focus sur les joueurs PSG |
 
+### Aperçu
+
+**Page 1 — Classement Ligue 1**
+
+![Page 1 — Classement](dashboard/page1_classement.png)
+
+**Page 2 — Performance PSG**
+
+![Page 2 — Performance PSG](dashboard/page2_performance.png)
+
+**Page 3 — Top performers**
+
+![Page 3 — Top performers](dashboard/page3_top-performers.png)
+
 ## Auteur
 
 **Vincent Génin** — Data Analyst
