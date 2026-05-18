@@ -1,0 +1,36 @@
+# =============================================================
+# PSG Analytics — .dockerignore
+# Fichiers exclus du contexte Docker (image plus légère)
+# =============================================================
+
+# Environnement virtuel Python local
+.venv/
+
+# Application Streamlit (pas dans l'image API)
+app/
+
+# dbt, data, notebooks (inutiles dans le container)
+dbt/
+data/
+notebooks/
+scripts/
+dashboard/
+docs/
+
+# Git et config locale
+.git/
+.gitignore
+.env
+.env.example
+
+# Cache Python
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Requirements global du projet (on utilise api/requirements.txt)
+requirements.txt
+
+# IDE
+.vscode/
+.idea/

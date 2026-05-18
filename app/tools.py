@@ -1,143 +1,82 @@
 """
-tools.py — Fonctions BigQuery exposées à l'agent Claude.
-Chaque fonction interroge un mart dbt et retourne un dict Python.
+tools.py — Fonctions exposées à l'agent Claude.
+Chaque fonction appelle l'API maison FastAPI (PSG Analytics API) via HTTP.
 
-Authentification GCP :
-  - En local     : via GOOGLE_APPLICATION_CREDENTIALS (fichier JSON) dans .env
-  - Streamlit Cloud : via st.secrets["gcp_service_account"] (dict JSON injecté)
+Authentification API :
+  - En local         : API_URL + API_KEY depuis .env
+  - Streamlit Cloud  : API_URL + API_KEY depuis st.secrets
 """
 
 import os
-import json
-from google.cloud import bigquery
-from google.oauth2 import service_account
+
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
 
-PROJECT  = os.getenv("GCP_PROJECT_ID", "psg-analytics-2026")
-DATASET  = os.getenv("BIGQUERY_DATASET", "psg_analytics")
 
-
-def _client() -> bigquery.Client:
+def _get_api_config() -> tuple[str, str]:
     """
-    Crée un client BigQuery authentifié.
-    Priorité : st.secrets (Streamlit Cloud) > GOOGLE_APPLICATION_CREDENTIALS (local).
+    Retourne (api_url, api_key) selon l'environnement d'exécution.
+    Priorité : st.secrets (Streamlit Cloud) > variables d'env (local).
     """
     try:
-        # Sur Streamlit Cloud, les secrets sont injectés via st.secrets
         import streamlit as st
-        if "gcp_service_account" in st.secrets:
-            creds = service_account.Credentials.from_service_account_info(
-                dict(st.secrets["gcp_service_account"]),
-                scopes=["https://www.googleapis.com/auth/cloud-platform"],
-            )
-            return bigquery.Client(project=PROJECT, credentials=creds)
+        if "api_url" in st.secrets and "api_key" in st.secrets:
+            return st.secrets["api_url"], st.secrets["api_key"]
     except Exception:
         pass
 
-    # En local : on utilise GOOGLE_APPLICATION_CREDENTIALS via l'env
-    return bigquery.Client(project=PROJECT)
+    api_url = os.getenv("API_URL", "http://localhost:8000")
+    api_key = os.getenv("API_KEY", "")
+    return api_url, api_key
+
+
+def _get(endpoint: str) -> dict:
+    """
+    Effectue un GET authentifié vers l'API et retourne le JSON.
+    Lève une RuntimeError si la réponse n'est pas 200.
+    """
+    api_url, api_key = _get_api_config()
+    url = f"{api_url.rstrip('/')}{endpoint}"
+    headers = {"X-API-Key": api_key}
+
+    response = requests.get(url, headers=headers, timeout=10)
+
+    if response.status_code != 200:
+        raise RuntimeError(
+            f"Erreur API {response.status_code} sur {endpoint} : {response.text}"
+        )
+
+    return response.json()
 
 
 def get_standings() -> dict:
     """
-    Retourne le classement complet de la Ligue 1 (mart_classement).
-    Colonnes réelles : position, team_name, points, won, draw, lost,
-                       goals_for, goals_against, goal_difference, is_psg.
+    Retourne le classement complet de la Ligue 1.
     """
-    sql = f"""
-        SELECT
-            position,
-            team_name,
-            played_games,
-            won,
-            draw,
-            lost,
-            points,
-            goals_for,
-            goals_against,
-            goal_difference,
-            is_psg
-        FROM `{PROJECT}.{DATASET}.mart_classement`
-        ORDER BY position
-    """
-    rows = _client().query(sql).result()
-    return {"classement": [dict(r) for r in rows]}
+    return _get("/standings")
 
 
 def get_psg_matches() -> dict:
     """
-    Retourne tous les matchs du PSG (mart_psg_matches).
-    Colonnes réelles : matchday, opponent_name, psg_side, psg_score,
-                       opponent_score, psg_result, psg_points_cumul.
+    Retourne tous les matchs du PSG terminés cette saison.
     """
-    sql = f"""
-        SELECT
-            matchday,
-            match_date,
-            opponent_name,
-            psg_side,
-            psg_score,
-            opponent_score,
-            psg_result,
-            psg_points,
-            psg_points_cumul,
-            is_clean_sheet
-        FROM `{PROJECT}.{DATASET}.mart_psg_matches`
-        WHERE is_finished = TRUE
-        ORDER BY matchday
-    """
-    rows = _client().query(sql).result()
-    return {"matchs": [dict(r) for r in rows]}
+    return _get("/matches")
 
 
 def get_top_scorers() -> dict:
     """
-    Retourne les meilleurs buteurs/passeurs de Ligue 1 (mart_top_scorers).
-    Colonnes réelles : rank, player_name, team_name, goals, assists,
-                       goal_contributions, is_psg_player.
+    Retourne le top 20 des buteurs/passeurs de Ligue 1, avec flag joueurs PSG.
     """
-    sql = f"""
-        SELECT
-            rank,
-            player_name,
-            team_name,
-            goals,
-            assists,
-            goal_contributions,
-            penalties,
-            played_matches,
-            is_psg_player
-        FROM `{PROJECT}.{DATASET}.mart_top_scorers`
-        ORDER BY rank
-        LIMIT 20
-    """
-    rows = _client().query(sql).result()
-    return {"top_scorers": [dict(r) for r in rows]}
+    return _get("/top-scorers")
 
 
 def get_psg_summary() -> dict:
     """
-    Retourne un résumé KPI du PSG : bilan V/N/D, buts, clean sheets, points.
-    Calculé directement depuis mart_psg_matches (matchs terminés uniquement).
+    Retourne le résumé KPI du PSG : V/N/D, buts, clean sheets, points.
     """
-    sql = f"""
-        SELECT
-            COUNT(*)                            AS matchs_joues,
-            COUNTIF(psg_result = 'WIN')         AS victoires,
-            COUNTIF(psg_result = 'DRAW')        AS nuls,
-            COUNTIF(psg_result = 'LOSS')        AS defaites,
-            SUM(psg_score)                      AS buts_marques,
-            SUM(opponent_score)                 AS buts_encaisses,
-            SUM(psg_score) - SUM(opponent_score) AS diff_buts,
-            COUNTIF(is_clean_sheet = TRUE)      AS clean_sheets,
-            MAX(psg_points_cumul)               AS points_totaux
-        FROM `{PROJECT}.{DATASET}.mart_psg_matches`
-        WHERE is_finished = TRUE
-    """
-    rows = list(_client().query(sql).result())
-    return {"resume_psg": dict(rows[0])}
+    return _get("/psg/summary")
 
 
 # --- Test rapide en ligne de commande ---
