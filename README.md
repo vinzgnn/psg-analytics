@@ -8,6 +8,7 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-Cloud-ff4b4b.svg)](https://streamlit.io/)
 [![Dashboard](https://img.shields.io/badge/Dashboard-Live-brightgreen.svg)](https://datastudio.google.com/reporting/7e12323e-aed2-4884-9ee2-b3c1e4b170c6)
 [![Assistant IA](https://img.shields.io/badge/Assistant%20IA-Live-ff4b4b.svg)](https://psg-analytic.streamlit.app)
+[![API](https://img.shields.io/badge/API-Cloud%20Run-4285F4.svg)](https://psg-analytics-api-990509883678.europe-west1.run.app/docs)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
@@ -20,7 +21,7 @@
 
 **Assistant PSG — live** : https://psg-analytic.streamlit.app
 
-Interface conversationnelle propulsée par l'API Claude (Anthropic) avec tool use BigQuery. Pose des questions en langage naturel sur le PSG et la Ligue 1 — l'agent interroge les données en temps réel.
+Interface conversationnelle propulsée par l'API Claude (Anthropic) avec tool use. Pose des questions en langage naturel sur le PSG et la Ligue 1 — l'agent interroge les données en temps réel via l'API maison.
 
 ## Dashboard interactif
 
@@ -64,8 +65,11 @@ Certifié *Claude AI Fluency*, *Building with the Claude API*, *Dataiku*, *dbt*.
 | Visualisation | Looker Studio |
 | Assistant IA | API Claude (Anthropic) |
 | Interface | Streamlit |
+| API REST | FastAPI + Uvicorn |
+| Containerisation | Docker |
+| Hébergement API | Google Cloud Run |
 | Versioning | Git / GitHub |
-| Déploiement | Streamlit Cloud |
+| Déploiement | Streamlit Cloud + Cloud Run |
 
 ## Architecture
 
@@ -78,7 +82,9 @@ football-data.org API
         ↓ dbt
    mart_* (analytique)
         ↓
-Looker Studio  +  Assistant Claude (Streamlit)
+Looker Studio  +  API FastAPI (Cloud Run)
+                         ↓ HTTP + X-API-Key
+                  Assistant Claude (Streamlit Cloud)
 ```
 
 ## Plan du projet
@@ -90,6 +96,7 @@ Looker Studio  +  Assistant Claude (Streamlit)
 | **Phase 3** | Dashboard Looker Studio | ✅ Terminée |
 | **Phase 4** | Assistant IA (Streamlit + API Claude) | ✅ Terminée |
 | **Phase 5** | Déploiement & Documentation | ✅ Terminée |
+| **Phase 6** | API maison FastAPI + Cloud Run | ✅ Terminée |
 
 ## Modélisation dbt
 
@@ -117,13 +124,16 @@ dbt docs generate && dbt docs serve --port 8081
 
 ```
 psg-analytics/
-├── docs/          Documentation projet (questions métier, décisions, etc.)
-├── data/          Échantillons et données brutes locales (gitignorées)
-├── notebooks/     Exploration Jupyter
-├── scripts/       Scripts de collecte API → BigQuery
+├── api/           API FastAPI (endpoints, auth, queries BigQuery)
+├── app/           Application Streamlit avec assistant Claude
 ├── dbt/           Modèles dbt (raw → staging → marts)
+├── scripts/       Scripts de collecte API → BigQuery
 ├── dashboard/     Captures et liens Looker Studio
-└── app/           Application Streamlit avec assistant Claude
+├── docs/          Documentation projet
+├── data/          Échantillons locaux (gitignorés)
+├── notebooks/     Exploration Jupyter
+├── Dockerfile     Image Docker de l'API (déployée sur Cloud Run)
+└── .env.example   Template des variables d'environnement
 ```
 
 ## Démarrage rapide
@@ -155,6 +165,58 @@ Voir `.env.example` pour la liste complète. Au minimum :
 - `FOOTBALL_DATA_API_KEY` — token football-data.org
 - `ANTHROPIC_API_KEY` — clé API Claude (Phase 4)
 - `GOOGLE_APPLICATION_CREDENTIALS` — chemin vers la clé de service GCP (Phase 2)
+- `API_URL` — URL de l'API FastAPI (Phase 6, `http://localhost:8000` en local)
+- `API_KEY` — clé secrète d'accès à l'API (Phase 6)
+
+## Phase 6 — API maison FastAPI
+
+**API publique** : https://psg-analytics-api-990509883678.europe-west1.run.app/docs
+
+L'assistant Streamlit ne parle plus directement à BigQuery. Toutes les données transitent par une API REST maison, déployée sur Google Cloud Run.
+
+### Endpoints
+
+| Méthode | Route | Description |
+|---|---|---|
+| `GET` | `/health` | Santé du service (sans auth) |
+| `GET` | `/psg/summary` | KPIs PSG : V/N/D, buts, clean sheets, points |
+| `GET` | `/standings` | Classement complet Ligue 1 |
+| `GET` | `/matches` | Matchs PSG terminés cette saison |
+| `GET` | `/top-scorers` | Top 20 buteurs/passeurs Ligue 1 |
+
+### Authentification
+
+Tous les endpoints de données nécessitent le header `X-API-Key` :
+
+```bash
+curl -H "X-API-Key: <votre_clé>" \
+  https://psg-analytics-api-990509883678.europe-west1.run.app/psg/summary
+```
+
+### Lancer l'API en local
+
+```bash
+# Variables d'env
+source .env
+
+# Démarrage
+uvicorn api.main:app --reload
+# → http://localhost:8000/docs
+```
+
+### Lancer avec Docker
+
+```bash
+docker build -t psg-analytics-api .
+
+docker run --rm -p 8080:8080 \
+  -e API_KEY=<clé> \
+  -e GCP_PROJECT_ID=psg-analytics-2026 \
+  -e BIGQUERY_DATASET=psg_analytics \
+  -e GOOGLE_APPLICATION_CREDENTIALS=/tmp/key.json \
+  -v ~/.gcp/psg-analytics-key.json:/tmp/key.json:ro \
+  psg-analytics-api
+```
 
 ## Licence
 
